@@ -1,4 +1,4 @@
-# User and Group Creation Script (create_users.sh)
+# User's Management Tool
 
 This bash script automates the creation of user accounts and associated groups based on input from a text file. It is designed for SysOps engineers to efficiently onboard new developers in a secure and organized manner.
 
@@ -29,15 +29,14 @@ This bash script automates the creation of user accounts and associated groups b
 1. **Clone the repository:**
 
    ```bash
-   git clone <repository-url>
-   cd <repository-directory>
-
+   git clone https://github.com/Kemzzy-Dev/HNG11-stage-1.git
+   cd HNG11-stage-1
 
 2. **Prepare the input file:**
 
 - Create a text file (users.txt) containing usernames and their respective groups, formatted as (username;group1,group2.)
 
-    ```
+    ```bash
     light;sudo,dev,www-data
     idimma;sudo
     mayowa;dev,www-data
