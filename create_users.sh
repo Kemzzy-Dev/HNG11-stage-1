@@ -16,31 +16,30 @@ mkdir -p /var/secure
 touch $LOGFILE $PASSWORD_FILE
 chmod 600 $PASSWORD_FILE
 
+generate_random_password() {
+    local length=${1:-10} # Default length is 10 if no argument is provided
+    LC_ALL=C tr -dc 'A-Za-z0-9!?%+=' < /dev/urandom | head -c $length
+}
+
 # Function to create a user
 create_user() {
   local username=$1
   local groups=$2
 
-  if id "$username" &>/dev/null; then
+  if getent passwd "$username" > /dev/null; then
     echo "User $username already exists" | tee -a $LOGFILE
   else
     useradd -m $username
     echo "Created user $username" | tee -a $LOGFILE
   fi
 
-  # Create a personal group for the user
-  if ! getent group "$username" &>/dev/null; then
-    groupadd "$username"
-    usermod -aG "$username" "$username"
-    echo "Created personal group $username for user $username" | tee -a $LOGFILE
-  fi
+  # Add user to specified groupsgroup
+  groups_array=($(echo $groups | tr "," "\n"))
 
-  # Add user to specified groups
-  IFS=',' read -ra GROUPS <<< "$groups"
-  for group in "${GROUPS[@]}"; do
-    if ! getent group "$group" &>/dev/null; then
+  for group in "${groups_array[@]}"; do
+    if ! getent group "$group" >/dev/null; then
       groupadd "$group"
-      echo "Created group $group" | tee -a $LOGFILE
+      echo "Created group $group" | tee -a $LOGFILE      
     fi
     usermod -aG "$group" "$username"
     echo "Added user $username to group $group" | tee -a $LOGFILE
@@ -52,7 +51,7 @@ create_user() {
   echo "Set up home directory for user $username" | tee -a $LOGFILE
 
   # Generate a random password
-  local password=$(openssl rand -base64 12)
+  password=$(generate_random_password 12) 
   echo "$username:$password" | chpasswd
   echo "$username,$password" >> $PASSWORD_FILE
   echo "Set password for user $username" | tee -a $LOGFILE

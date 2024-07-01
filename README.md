@@ -44,7 +44,7 @@ This bash script automates the creation of user accounts and associated groups b
 3. **Run the script**
 
     ```bash
-    bash create_users.sh users.txt
+    sudo bash create_users.sh users.txt
 
 4. **Verify**
 
