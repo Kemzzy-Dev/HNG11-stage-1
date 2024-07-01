@@ -18,7 +18,11 @@ chmod 600 $PASSWORD_FILE
 
 generate_random_password() {
     local length=${1:-10} # Default length is 10 if no argument is provided
-    LC_ALL=C tr -dc 'A-Za-z0-9!?%+=' < /dev/urandom | head -c $length
+    tr -dc 'A-Za-z0-9!?%+=' < /dev/urandom | head -c $length
+}
+
+log_message() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> $LOGFILE
 }
 
 # Function to create a user
@@ -27,10 +31,10 @@ create_user() {
   local groups=$2
 
   if getent passwd "$username" > /dev/null; then
-    echo "User $username already exists" | tee -a $LOGFILE
+    log_message "User $username already exists"
   else
     useradd -m $username
-    echo "Created user $username" | tee -a $LOGFILE
+    log_message "Created user $username"
   fi
 
   # Add user to specified groupsgroup
@@ -39,27 +43,28 @@ create_user() {
   for group in "${groups_array[@]}"; do
     if ! getent group "$group" >/dev/null; then
       groupadd "$group"
-      echo "Created group $group" | tee -a $LOGFILE      
+      log_message "Created group $group"   
     fi
     usermod -aG "$group" "$username"
-    echo "Added user $username to group $group" | tee -a $LOGFILE
+    log_message "Added user $username to group $group"
   done
 
   # Set up home directory permissions
   chmod 700 /home/$username
   chown $username:$username /home/$username
-  echo "Set up home directory for user $username" | tee -a $LOGFILE
+  log_message "Set up home directory for user $username" 
 
   # Generate a random password
   password=$(generate_random_password 12) 
   echo "$username:$password" | chpasswd
   echo "$username,$password" >> $PASSWORD_FILE
-  echo "Set password for user $username" | tee -a $LOGFILE
+  log_message "Set password for user $username"
 }
 
 # Read the input file and create users
 while IFS=';' read -r username groups; do
   create_user "$username" "$groups"
+  echo $username
 done < "$1"
 
-echo "User creation process completed." | tee -a $LOGFILE
+log_message "User creation process completed."
